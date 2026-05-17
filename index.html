@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>𓃥 白六 Kejiban</title>
+    <title>𓃥 白六 Kejiban - 正宗門前規則版</title>
     <style>
         :root {
             --bg-color: #0f1016;
@@ -423,36 +423,24 @@
             });
         }
 
-        // 核心修正：確認是否能翻牌，同時檢查是否觸發「全場牌抽乾」的極端結算
+        // 正宗門前規則：抽牌堆沒了就是沒了，絕對不回收廢牌！
         function checkAndRefillDeck() {
             if (deck.length === 0) {
-                if (graveyard.length > 0) {
-                    logMsg(`🔄 抽牌堆已空！立刻將回收廢牌 (${graveyard.length} 張) 重新打亂洗勻，補回抽牌堆！`);
-                    graveyard.sort(() => Math.random() - 0.5);
-                    deck = [...graveyard];
-                    graveyard = [];
-                    updateUI();
-                    return true;
-                } else {
-                    // 抽牌堆為0，且廢牌堆也為0 -> 所有的牌通通都在玩家手上了！
-                    handleAllCardsInHandsEnd();
-                    return false;
-                }
+                handleAllCardsInHandsEnd();
+                return false;
             }
             return true;
         }
 
-        // 新增：所有牌都被抽乾在玩家手上時的極速結算邏輯
+        // 門前乾牌特殊結算：當抽牌堆見底且有人沒牌跟時，立刻比手中牌數決定勝負名次
         function handleAllCardsInHandsEnd() {
-            logMsg("⚠️ 全場卡牌已全數被玩家抽乾！立即根據手上牌數多寡結算名次！");
+            logMsg("⚠️ 抽牌堆已無牌可抽！正宗門前規則觸發：直接比對剩餘玩家的手牌數決定名次！");
             
-            // 找出所有還沒下莊的人
             let remainingPlayers = players.filter(p => p.rank === 0);
             
             // 依據手牌張數由少到多排序
             remainingPlayers.sort((a, b) => a.hand.length - b.hand.length);
             
-            // 依序分發剩餘的名次
             remainingPlayers.forEach(p => {
                 p.rank = nextRankToGive++;
             });
@@ -461,7 +449,7 @@
             
             setTimeout(() => {
                 let scoreboard = [...players].sort((a,b) => a.rank - b.rank).map(p => `第 ${p.rank} 名: ${p.name} (剩餘 ${p.hand.length} 張牌)`).join('\n');
-                alert(`🏁 【全場卡牌抽乾 · 終極張數大比拼】\n\n${scoreboard}`);
+                alert(`🏁 【抽牌堆見底 · 門前手牌終極大比拼】\n\n${scoreboard}`);
             }, 800);
         }
 
@@ -605,7 +593,7 @@
         }
 
         function nextTurn() {
-            if (nextRankToGive > 4) return; // 已經結算完畢
+            if (nextRankToGive > 4) return; 
             if (checkAndHandleInstantGameEnd()) return;
 
             if (isRoundComplete()) {
@@ -630,7 +618,7 @@
                         logMsg(`請選擇【${suitNames[currentSuit]}】跟牌。`);
                         document.getElementById('draw-btn').disabled = true;
                     } else {
-                        if (!checkAndRefillDeck()) return; // 若全場乾牌，直接中斷執行
+                        if (!checkAndRefillDeck()) return; 
                         logMsg("你手上沒有對應花色！強迫進行「翻不停」抽牌！");
                         document.getElementById('draw-btn').disabled = false;
                         document.getElementById('action-btn').disabled = true;
@@ -684,8 +672,7 @@
                 document.getElementById('action-btn').disabled = false;
             } else {
                 logMsg(`翻到 [${newCard.r === '10' ? '10' : newCard.r}${suitNames[newCard.s]}] 花色不符，暫放手牌末端，請繼續翻！`);
-                // 翻完牌後，如果抽牌堆沒了，下一手前立刻再做一次乾牌檢查
-                if (deck.length === 0 && graveyard.length === 0) {
+                if (deck.length === 0) {
                     handleAllCardsInHandsEnd();
                     return;
                 }
@@ -748,7 +735,7 @@
                 logMsg(`${ai.name} 沒有指定花色，被迫啟動「翻不停」抽牌中...`);
                 updateUI();
                 
-                if (deck.length === 0 && graveyard.length === 0) {
+                if (deck.length === 0) {
                     handleAllCardsInHandsEnd();
                     return;
                 }
